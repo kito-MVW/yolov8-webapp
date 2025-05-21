@@ -8,7 +8,7 @@ import numpy as np
 app = Flask(__name__)
 
 # โหลด YOLOv8 โมเดล
-model = YOLO(r'D:\Prasanth Project\runs\detect\train6\weights\best.pt')
+model = YOLO("model/best.pt")
 
 # โฟลเดอร์สำหรับเก็บภาพที่อัปโหลดและผลลัพธ์
 UPLOAD_FOLDER = os.path.join('Web Project', 'static', 'uploads')
