@@ -8,7 +8,7 @@ import numpy as np
 app = Flask(__name__)
 
 # โหลด YOLOv8 โมเดล
-model = YOLO("model/best.pt")
+model = YOLO("best.pt")
 
 # โฟลเดอร์สำหรับเก็บภาพที่อัปโหลดและผลลัพธ์
 UPLOAD_FOLDER = os.path.join('Web Project', 'static', 'uploads')
