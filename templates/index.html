@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YOLOv8 Shaft Classifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #444;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        .image-container {
+            margin-top: 20px;
+        }
+        img {
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            max-width: 600px;
+        }
+        ul {
+            list-style: square;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload an Image for Shaft Detection</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required>
+        <br>
+        <input type="submit" value="Predict">
+    </form>
+
+    {% if prediction %}
+        <h2>Detected:</h2>
+        <ul>
+            {% for p in prediction %}
+                <li>{{ p }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        {% if image_path %}
+            <h2>No objects detected.</h2>
+        {% endif %}
+    {% endif %}
+
+    {% if image_path %}
+        <div class="image-container">
+            <h3>Processed Image:</h3>
+            <img src="{{ image_path }}" alt="Result Image">
+        </div>
+    {% endif %}
+</body>
+</html>
