@@ -1,5 +1,7 @@
 Flask
 gunicorn
+ultralytics
 torch
 torchvision
 Pillow
+numpy
