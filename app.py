@@ -11,8 +11,8 @@ app = Flask(__name__)
 model = YOLO("best.pt")
 
 # โฟลเดอร์สำหรับเก็บภาพที่อัปโหลดและผลลัพธ์
-UPLOAD_FOLDER = os.path.join('Web Project', 'static', 'uploads')
-PREDICTION_FOLDER = os.path.join('Web Project', 'static', 'predictions')
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+PREDICTION_FOLDER = os.path.join('static', 'predictions')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PREDICTION_FOLDER, exist_ok=True)
 
