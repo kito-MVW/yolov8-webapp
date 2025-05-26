@@ -3,17 +3,20 @@ from flask import Flask, request, render_template, url_for
 from werkzeug.utils import secure_filename
 from ultralytics import YOLO
 from PIL import Image
+import numpy as np
+import gc  # garbage collector
 
 app = Flask(__name__)
-
-# โหลด YOLOv8 โมเดล
-model = YOLO("model/best.pt")
 
 # โฟลเดอร์สำหรับเก็บภาพที่อัปโหลดและผลลัพธ์
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 PREDICTION_FOLDER = os.path.join('static', 'predictions')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PREDICTION_FOLDER, exist_ok=True)
+
+# ฟังก์ชันโหลดโมเดลเมื่อ predict (ไม่โหลดค้างไว้)
+def load_model():
+    return YOLO("model/best.pt")
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -23,31 +26,31 @@ def index():
     if request.method == 'POST':
         file = request.files['image']
         if file:
-            # ✅ 1. เซฟไฟล์ภาพที่อัปโหลด
+            # เซฟไฟล์ภาพที่อัปโหลด
             filename = secure_filename(file.filename)
             upload_path = os.path.join(UPLOAD_FOLDER, filename)
             file.save(upload_path)
 
-            # ✅ 2. Resize รูปให้เล็กลง (ลดภาระ RAM)
-            try:
-                img = Image.open(upload_path)
-                img = img.convert("RGB")  # ป้องกัน RGBA error
-                img.thumbnail((640, 640))  # Resize ให้สั้นยาวไม่เกิน 640px
-                img.save(upload_path)
-            except Exception as e:
-                return f"เกิดข้อผิดพลาดในการ Resize: {e}"
+            # 1️⃣ resize ภาพก่อน predict เพื่อลด RAM
+            im = Image.open(upload_path)
+            im = im.convert('RGB')
+            im = im.resize((640, 640))
+            im.save(upload_path)
 
-            # ✅ 3. ทำนายด้วย YOLOv8
-            results = model.predict(source=upload_path, save=False, conf=0.4)
+            # 2️⃣ โหลดโมเดลเฉพาะตอน predict
+            model = load_model()
 
-            # ✅ 4. วาดกรอบบนภาพ
+            # 3️⃣ ใช้ predict โดยกำหนด device และขนาดรูป
+            results = model.predict(source=upload_path, save=False, conf=0.4, imgsz=640, device='cpu')
+
+            # 4️⃣ วาดกรอบผลลัพธ์และบันทึก
             for r in results:
                 im_array = r.plot()
-                im = Image.fromarray(im_array)
+                im_pred = Image.fromarray(im_array)
                 pred_path = os.path.join(PREDICTION_FOLDER, filename)
-                im.save(pred_path)
+                im_pred.save(pred_path)
 
-                # ✅ 5. เตรียมผลลัพธ์สำหรับแสดง
+                # สร้างผลลัพธ์สำหรับแสดง
                 prediction = []
                 for box in r.boxes:
                     cls_id = int(box.cls[0])
@@ -55,10 +58,13 @@ def index():
                     conf = float(box.conf[0]) * 100
                     prediction.append(f"{cls_name} ({conf:.1f}%)")
 
-            # ✅ 6. Path สำหรับแสดงผล
+            # 5️⃣ Clear memory ที่ไม่ใช้แล้ว
+            del model
+            gc.collect()
+
+            # ส่ง path ไปยัง template
             image_path = url_for('static', filename=f'predictions/{filename}')
 
-    # ✅ 7. Render template
     return render_template('index.html', prediction=prediction, image_path=image_path)
 
 if __name__ == '__main__':
